@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Roblox Auto-Ribbon Grid</title>
+    <style>
+        body { font-family: system-ui; display: flex; flex-direction: column; align-items: center; background: #f4f4f9; padding: 20px; }
+        .container { display: flex; gap: 30px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .sidebar { width: 280px; }
+        canvas { border: 2px solid #ddd; border-radius: 4px; background: #fff; }
+        .ribbon-selector { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 15px; max-height: 300px; overflow-y: auto; }
+        .ribbon-option { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid #eee; border-radius: 6px; }
+        .ribbon-option img { width: 40px; height: 40px; object-fit: contain; }
+        button { width: 100%; margin-top: 20px; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0056b3; }
+        input[type="file"] { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>T-Shirt Ribbon Grid Generator</h1>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3>1. Upload Base Shirt</h3>
+            <input type="file" id="baseUpload" accept="image/*">
+
+            <h3>2. Select Ribbons</h3>
+            <div class="ribbon-selector" id="ribbonList">
+                <label class="ribbon-option">
+                    <input type="checkbox" value="ribbon1.png" onchange="draw()">
+                    <img src="ribbon1.png"> Ribbon Alpha
+                </label>
+                <label class="ribbon-option">
+                    <input type="checkbox" value="ribbon2.png" onchange="draw()">
+                    <img src="ribbon2.png"> Ribbon Beta
+                </label>
+                <label class="ribbon-option">
+                    <input type="checkbox" value="ribbon3.png" onchange="draw()">
+                    <img src="ribbon3.png"> Ribbon Gamma
+                </label>
+            </div>
+
+            <button onclick="download()">Download Result</button>
+        </div>
+
+        <canvas id="mainCanvas" width="585" height="559"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const baseUpload = document.getElementById('baseUpload');
+        
+        let baseImage = null;
+
+        // Grid Settings
+        const ribbonSize = 80;    // Size of each ribbon
+        const padding = 20;       // Space between ribbons
+        const startX = 50;        // Starting X position on the shirt
+        const startY = 100;       // Starting Y position (front of chest)
+        const maxPerRow = 5;      // How many ribbons before starting a new row
+
+        baseUpload.onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    baseImage = img;
+                    draw();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        async function draw() {
+            // 1. Clear Canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Draw Base Image if exists
+            if (baseImage) {
+                ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
+            }
+
+            // 3. Get all checked ribbons
+            const checkedRibbons = Array.from(document.querySelectorAll('#ribbonList input:checked'));
+
+            // 4. Draw Ribbons in a Grid
+            for (let i = 0; i < checkedRibbons.length; i++) {
+                const row = Math.floor(i / maxPerRow);
+                const col = i % maxPerRow;
+
+                const x = startX + (col * (ribbonSize + padding));
+                const y = startY + (row * (ribbonSize + padding));
+
+                const ribbonImg = await loadRibbonImage(checkedRibbons[i].value);
+                ctx.drawImage(ribbonImg, x, y, ribbonSize, ribbonSize);
+            }
+        }
+
+        // Helper to load images as promises
+        function loadRibbonImage(src) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.src = src;
+            });
+        }
+
+        function download() {
+            const link = document.createElement('a');
+            link.download = 'roblox-ribbon-shirt.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
