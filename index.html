@@ -125,16 +125,17 @@
             const name = document.getElementById('userName').value.toUpperCase();
             
             // Set font size to 5px to match your box height
-            ctx.font = "5px 'SpecialFont'"; 
+            ctx.font = "1px 'SpecialFont'"; 
             ctx.fillStyle = "white";
             
             // Centering Logic
             ctx.textAlign = "center";   // Centers horizontally on X
-            ctx.textBaseline = "middle"; // Centers vertically on Y
+            ctx.textBaseline = "top"; // Centers vertically on Y
             
             // X = 99 (Center of 85-113)
-            // Y = 39 (Center of 37-41)
-            ctx.fillText(name, 99, 39);
+            // Y = 37 (The very top of your 37-41 box)
+            // We use Math.floor to ensure we aren't on a "half-pixel"
+            ctx.fillText(name, Math.floor(99), Math.floor(37));
 
             // 4. Draw Ribbons
             for (let i = 0; i < selectedRibbons.length; i++) {
