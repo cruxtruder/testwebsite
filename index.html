@@ -4,10 +4,9 @@
     <meta charset="UTF-8">
     <title>Roblox T-Shirt Generator</title>
     <style>
-        /* Loading the custom font from your GitHub repo */
         @font-face {
             font-family: 'SpecialFont';
-            src: url('fonts/noobic-military-police.ttf'); /* Ensure this path is correct */
+            src: url('fonts/noobic-military-police.ttf');
         }
 
         body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; padding: 40px; }
@@ -22,17 +21,24 @@
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
             border: 2px solid #000;
-            image-rendering: pixelated; /* Keeps it sharp */
-            width: 256px; height: 256px; /* Visual zoom, actual pixels remain 128 */
+            image-rendering: pixelated; 
+            width: 384px; height: 384px; /* 3x Zoom for visibility */
         }
 
-        input[type="text"] { padding: 10px; border-radius: 5px; border: none; font-size: 16px; }
-        .ribbon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .ribbon-btn { cursor: pointer; border: 2px solid transparent; border-radius: 5px; background: #333; transition: 0.2s; }
+        input[type="text"] { padding: 10px; border-radius: 5px; border: none; font-size: 16px; text-transform: uppercase; }
+        .ribbon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
+        .ribbon-btn { cursor: pointer; border: 2px solid transparent; border-radius: 5px; background: #333; transition: 0.2s; position: relative; }
         .ribbon-btn.active { border-color: #00ff00; background: #444; }
-        .ribbon-btn img { width: 100%; display: block; }
+        .ribbon-btn img { width: 100%; display: block; image-rendering: pixelated; }
         
-        .download-btn { background: #00ff00; color: black; font-weight: bold; padding: 15px; border: none; border-radius: 5px; cursor: pointer; }
+        /* Small badge to show the order selected */
+        .ribbon-btn.active::after {
+            content: attr(data-order);
+            position: absolute; top: -5px; right: -5px; background: #00ff00; 
+            color: black; font-size: 10px; font-weight: bold; padding: 2px 5px; border-radius: 50%;
+        }
+
+        .download-btn { background: #00ff00; color: black; font-weight: bold; padding: 15px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -42,89 +48,116 @@
     <div class="editor">
         <div class="controls">
             <label>Name (Max 8 Characters)</label>
-            <input type="text" id="userName" maxlength="8" placeholder="Enter Name" oninput="updateCanvas()">
+            <input type="text" id="userName" maxlength="8" placeholder="ENTER NAME" oninput="updateCanvas()">
 
-            <label>Select Ribbon</label>
+            <label>Select Ribbons (Click to add/remove)</label>
             <div class="ribbon-grid" id="ribbonGrid">
-                <div class="ribbon-btn" onclick="selectRibbon('Academy Graduate Ribbon.png', this)"><img src="ribbons/ribbon1.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('Distinguished Service 2nd Class.png', this)"><img src="ribbons/ribbon2.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('Distinguished Service 3rd Class.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('Distinguished Service 4th Class.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('Founding Member Ribbon.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('General Body Commendation.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('NCO Commendation Ribbon.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('Squid Game Winner Ribbon.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('f.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('green.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('idk.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('plus.png', this)"><img src="ribbons/ribbon3.png"></div>
-                <div class="ribbon-btn" onclick="selectRibbon('s.png', this)"><img src="ribbons/ribbon3.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('Academy Graduate Ribbon.png', this)"><img src="ribbons/Academy Graduate Ribbon.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('Distinguished Service 2nd Class.png', this)"><img src="ribbons/Distinguished Service 2nd Class.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('Distinguished Service 3rd Class.png', this)"><img src="ribbons/Distinguished Service 3rd Class.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('Distinguished Service 4th Class.png', this)"><img src="ribbons/Distinguished Service 4th Class.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('Founding Member Ribbon.png', this)"><img src="ribbons/Founding Member Ribbon.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('General Body Commendation.png', this)"><img src="ribbons/General Body Commendation.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('NCO Commendation Ribbon.png', this)"><img src="ribbons/NCO Commendation Ribbon.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('Squid Game Winner Ribbon.png', this)"><img src="ribbons/Squid Game Winner Ribbon.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('f.png', this)"><img src="ribbons/f.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('green.png', this)"><img src="ribbons/green.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('idk.png', this)"><img src="ribbons/idk.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('plus.png', this)"><img src="ribbons/plus.png"></div>
+                <div class="ribbon-btn" onclick="toggleRibbon('s.png', this)"><img src="ribbons/s.png"></div>
             </div>
             <button class="download-btn" onclick="download()">Download 128x128 PNG</button>
         </div>
 
         <div class="preview">
             <canvas id="tshirtCanvas" width="128" height="128"></canvas>
-            <p style="text-align:center; color: #888;">Preview (2x Zoom)</p>
+            <p style="text-align:center; color: #888;">Preview (3x Zoom)</p>
         </div>
     </div>
 
     <script>
         const canvas = document.getElementById('tshirtCanvas');
         const ctx = canvas.getContext('2d');
-        let selectedRibbonPath = null;
+        let selectedRibbons = []; // Order-preserved array
 
-        // Configuration for "Set Places"
-        const POSITIONS = {
-            ribbon: { x: 14, y: 10, w: 100, h: 100 }, // Centralized
-            text: { x: 64, y: 115 } // Bottom center
-        };
+        // Requirements from your prompt
+        const RIBBON_W = 11;
+        const RIBBON_H = 5;
+        const GRID_START_X = 9;
+        const GRID_START_Y = 30;
+        const MAX_PER_ROW = 3;
 
-        function selectRibbon(path, el) {
-            // Highlight selection
-            document.querySelectorAll('.ribbon-btn').forEach(btn => btn.classList.remove('active'));
-            el.classList.add('active');
-            
-            selectedRibbonPath = 'ribbons/' + path;
+        // Text box: 85,37 (TL) to 113,41 (BR)
+        const BOX_CENTER_X = 99; // (85+113)/2
+        const BOX_BOTTOM_Y = 41;
+        const BOX_WIDTH = 28;    // 113-85
+
+        function toggleRibbon(filename, el) {
+            const path = 'ribbons/' + filename;
+            const index = selectedRibbons.indexOf(path);
+
+            if (index > -1) {
+                selectedRibbons.splice(index, 1);
+                el.classList.remove('active');
+                el.removeAttribute('data-order');
+            } else {
+                selectedRibbons.push(path);
+                el.classList.add('active');
+            }
+
+            // Update order visual aids
+            document.querySelectorAll('.ribbon-btn.active').forEach(btn => {
+                const btnPath = btn.querySelector('img').getAttribute('src');
+                const orderNum = selectedRibbons.indexOf(btnPath) + 1;
+                btn.setAttribute('data-order', orderNum);
+            });
+
             updateCanvas();
         }
 
         async function updateCanvas() {
-            // 1. Start with transparent canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 2. Draw Ribbon if selected
-            if (selectedRibbonPath) {
-                const img = await loadImage(selectedRibbonPath);
-                ctx.drawImage(img, POSITIONS.ribbon.x, POSITIONS.ribbon.y, POSITIONS.ribbon.w, POSITIONS.ribbon.h);
-            }
-
-            // 3. Draw Text
-            const name = document.getElementById('userName').value;
-            ctx.font = "20px 'SpecialFont'"; // Use your custom font name
+            // 1. Draw Text (Centered in 85,37-113,41)
+            const name = document.getElementById('userName').value.toUpperCase();
+            ctx.font = "6px 'SpecialFont'"; 
             ctx.fillStyle = "white";
             ctx.textAlign = "center";
-            ctx.shadowColor = "black";
-            ctx.shadowBlur = 4;
-            ctx.fillText(name, POSITIONS.text.x, POSITIONS.text.y);
+            ctx.fillText(name, BOX_CENTER_X, BOX_BOTTOM_Y, BOX_WIDTH);
+
+            // 2. Draw Ribbons in Order
+            for (let i = 0; i < selectedRibbons.length; i++) {
+                const row = Math.floor(i / MAX_PER_ROW);
+                const col = i % MAX_PER_ROW;
+
+                const x = GRID_START_X + (col * RIBBON_W);
+                const y = GRID_START_Y + (row * RIBBON_H);
+
+                try {
+                    const img = await loadImage(selectedRibbons[i]);
+                    ctx.drawImage(img, x, y, RIBBON_W, RIBBON_H);
+                } catch (e) {
+                    console.error("Failed to load:", selectedRibbons[i]);
+                }
+            }
         }
 
         function loadImage(src) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.onload = () => resolve(img);
+                img.onerror = reject;
                 img.src = src;
             });
         }
 
         function download() {
             const link = document.createElement('a');
-            link.download = 'tshirt-export.png';
+            link.download = 'roblox-tshirt.png';
             link.href = canvas.toDataURL("image/png");
             link.click();
         }
 
-        // Wait for fonts to load before first draw
         document.fonts.ready.then(() => updateCanvas());
     </script>
 </body>
