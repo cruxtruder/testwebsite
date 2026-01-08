@@ -2,105 +2,105 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Roblox Auto-Ribbon Grid</title>
+    <title>Roblox T-Shirt Generator</title>
     <style>
-        body { font-family: system-ui; display: flex; flex-direction: column; align-items: center; background: #f4f4f9; padding: 20px; }
-        .container { display: flex; gap: 30px; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .sidebar { width: 280px; }
-        canvas { border: 2px solid #ddd; border-radius: 4px; background: #fff; }
-        .ribbon-selector { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 15px; max-height: 300px; overflow-y: auto; }
-        .ribbon-option { display: flex; align-items: center; gap: 10px; padding: 8px; border: 1px solid #eee; border-radius: 6px; }
-        .ribbon-option img { width: 40px; height: 40px; object-fit: contain; }
-        button { width: 100%; margin-top: 20px; padding: 12px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0056b3; }
-        input[type="file"] { margin-bottom: 20px; }
+        /* Loading the custom font from your GitHub repo */
+        @font-face {
+            font-family: 'SpecialFont';
+            src: url('fonts/special-font.ttf'); /* Ensure this path is correct */
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; display: flex; flex-direction: column; align-items: center; padding: 40px; }
+        .editor { display: flex; gap: 40px; background: #2a2a2a; padding: 30px; border-radius: 15px; border: 1px solid #444; }
+        
+        .controls { width: 300px; display: flex; flex-direction: column; gap: 20px; }
+        canvas { 
+            background-image: linear-gradient(45deg, #333 25%, transparent 25%), 
+                              linear-gradient(-45deg, #333 25%, transparent 25%), 
+                              linear-gradient(45deg, transparent 75%, #333 75%), 
+                              linear-gradient(-45deg, transparent 75%, #333 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+            border: 2px solid #000;
+            image-rendering: pixelated; /* Keeps it sharp */
+            width: 256px; height: 256px; /* Visual zoom, actual pixels remain 128 */
+        }
+
+        input[type="text"] { padding: 10px; border-radius: 5px; border: none; font-size: 16px; }
+        .ribbon-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .ribbon-btn { cursor: pointer; border: 2px solid transparent; border-radius: 5px; background: #333; transition: 0.2s; }
+        .ribbon-btn.active { border-color: #00ff00; background: #444; }
+        .ribbon-btn img { width: 100%; display: block; }
+        
+        .download-btn { background: #00ff00; color: black; font-weight: bold; padding: 15px; border: none; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <h1>T-Shirt Ribbon Grid Generator</h1>
+    <h2>T-Shirt Label Generator</h2>
 
-    <div class="container">
-        <div class="sidebar">
-            <h3>1. Upload Base Shirt</h3>
-            <input type="file" id="baseUpload" accept="image/*">
+    <div class="editor">
+        <div class="controls">
+            <label>Name (Max 8 Characters)</label>
+            <input type="text" id="userName" maxlength="8" placeholder="Enter Name" oninput="updateCanvas()">
 
-            <h3>2. Select Ribbons</h3>
-            <div class="ribbon-selector" id="ribbonList">
-                <label class="ribbon-option">
-                    <input type="checkbox" value="ribbon1.png" onchange="draw()">
-                    <img src="ribbon1.png"> Ribbon Alpha
-                </label>
-                <label class="ribbon-option">
-                    <input type="checkbox" value="ribbon2.png" onchange="draw()">
-                    <img src="ribbon2.png"> Ribbon Beta
-                </label>
-                <label class="ribbon-option">
-                    <input type="checkbox" value="ribbon3.png" onchange="draw()">
-                    <img src="ribbon3.png"> Ribbon Gamma
-                </label>
+            <label>Select Ribbon</label>
+            <div class="ribbon-grid" id="ribbonGrid">
+                <div class="ribbon-btn" onclick="selectRibbon('ribbon1.png', this)"><img src="ribbons/ribbon1.png"></div>
+                <div class="ribbon-btn" onclick="selectRibbon('ribbon2.png', this)"><img src="ribbons/ribbon2.png"></div>
+                <div class="ribbon-btn" onclick="selectRibbon('ribbon3.png', this)"><img src="ribbons/ribbon3.png"></div>
             </div>
 
-            <button onclick="download()">Download Result</button>
+            <button class="download-btn" onclick="download()">Download 128x128 PNG</button>
         </div>
 
-        <canvas id="mainCanvas" width="585" height="559"></canvas>
+        <div class="preview">
+            <canvas id="tshirtCanvas" width="128" height="128"></canvas>
+            <p style="text-align:center; color: #888;">Preview (2x Zoom)</p>
+        </div>
     </div>
 
     <script>
-        const canvas = document.getElementById('mainCanvas');
+        const canvas = document.getElementById('tshirtCanvas');
         const ctx = canvas.getContext('2d');
-        const baseUpload = document.getElementById('baseUpload');
-        
-        let baseImage = null;
+        let selectedRibbonPath = null;
 
-        // Grid Settings
-        const ribbonSize = 80;    // Size of each ribbon
-        const padding = 20;       // Space between ribbons
-        const startX = 50;        // Starting X position on the shirt
-        const startY = 100;       // Starting Y position (front of chest)
-        const maxPerRow = 5;      // How many ribbons before starting a new row
-
-        baseUpload.onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    baseImage = img;
-                    draw();
-                };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(e.target.files[0]);
+        // Configuration for "Set Places"
+        const POSITIONS = {
+            ribbon: { x: 14, y: 10, w: 100, h: 100 }, // Centralized
+            text: { x: 64, y: 115 } // Bottom center
         };
 
-        async function draw() {
-            // 1. Clear Canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // 2. Draw Base Image if exists
-            if (baseImage) {
-                ctx.drawImage(baseImage, 0, 0, canvas.width, canvas.height);
-            }
-
-            // 3. Get all checked ribbons
-            const checkedRibbons = Array.from(document.querySelectorAll('#ribbonList input:checked'));
-
-            // 4. Draw Ribbons in a Grid
-            for (let i = 0; i < checkedRibbons.length; i++) {
-                const row = Math.floor(i / maxPerRow);
-                const col = i % maxPerRow;
-
-                const x = startX + (col * (ribbonSize + padding));
-                const y = startY + (row * (ribbonSize + padding));
-
-                const ribbonImg = await loadRibbonImage(checkedRibbons[i].value);
-                ctx.drawImage(ribbonImg, x, y, ribbonSize, ribbonSize);
-            }
+        function selectRibbon(path, el) {
+            // Highlight selection
+            document.querySelectorAll('.ribbon-btn').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+            
+            selectedRibbonPath = 'ribbons/' + path;
+            updateCanvas();
         }
 
-        // Helper to load images as promises
-        function loadRibbonImage(src) {
+        async function updateCanvas() {
+            // 1. Start with transparent canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Draw Ribbon if selected
+            if (selectedRibbonPath) {
+                const img = await loadImage(selectedRibbonPath);
+                ctx.drawImage(img, POSITIONS.ribbon.x, POSITIONS.ribbon.y, POSITIONS.ribbon.w, POSITIONS.ribbon.h);
+            }
+
+            // 3. Draw Text
+            const name = document.getElementById('userName').value;
+            ctx.font = "20px 'SpecialFont'"; // Use your custom font name
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.shadowColor = "black";
+            ctx.shadowBlur = 4;
+            ctx.fillText(name, POSITIONS.text.x, POSITIONS.text.y);
+        }
+
+        function loadImage(src) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => resolve(img);
@@ -110,10 +110,13 @@
 
         function download() {
             const link = document.createElement('a');
-            link.download = 'roblox-ribbon-shirt.png';
-            link.href = canvas.toDataURL();
+            link.download = 'tshirt-export.png';
+            link.href = canvas.toDataURL("image/png");
             link.click();
         }
+
+        // Wait for fonts to load before first draw
+        document.fonts.ready.then(() => updateCanvas());
     </script>
 </body>
 </html>
